@@ -1,0 +1,14 @@
+# ignore config files
+venv/*
+.idea/*
+.gitignore
+
+#ignore google creds
+google-auth.json
+
+#ignore test images
+*.jpg
+
+
+#ignore python3 dll
+python3.dll
