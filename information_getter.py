@@ -25,7 +25,7 @@ class Transcriber:
         self.output_csv = open(target, "w")
         self.output_csv.write("snumber,name,email,time\n")
 
-    def interp(self, content: json):
+    def interp(self, content: str) -> tuple[str, str, str]:
         snumber = None
         firstname = {
             'value': None,
@@ -57,26 +57,25 @@ class Transcriber:
             if "locale" in annotation:
                 full_string = annotation["description"].split("\n")
             text = annotation["description"]
-            print(text)
+            # print(text)
             topleft_x = annotation['boundingPoly']["vertices"][0]["x"]
             topleft_y = annotation['boundingPoly']["vertices"][0]["y"]
             if StudentCard.last_name.match(text) is None:
-                print(text + " invalid match")
+                # print(text + " invalid match")
                 continue
             if topleft_x not in range(firstname['x'] - 10, firstname['x'] + 10):
-                print(text + " not in range")
+                # print(text + " not in range")
                 continue
             if abs(lastname['y'] - firstname['y']) < abs(topleft_y - firstname['y']):
-                print(text + " not closest match")
+                # print(text + " not closest match")
                 continue
             lastname['value'] = text
             lastname['x'] = topleft_x
             lastname['y'] = topleft_y
         print(snumber)
-        print(firstname)
-        print(lastname)
-        print(full_string)
-        return snumber, firstname['value'], lastname['value']
+        print(firstname['value'], lastname['value'])
+        # print(full_string)
+        return snumber, str(firstname['value']), str(lastname['value'])
 
     def do(self, path: str):
         # content = ""
@@ -88,8 +87,8 @@ class Transcriber:
             print(response.status_code)
             print(response.content)
             return
-        image_desc = None
-        print(response.content)
+        # image_desc = None
+        # print(response.content)
         data = response.json()
         snumber, firstname, lastname = self.interp(data)
         if snumber is None or firstname is None or lastname is None:
@@ -97,11 +96,11 @@ class Transcriber:
             return
         self.insert_record(snumber, firstname + " " + lastname)
 
-    def get_time_str(self):
+    def get_time_str(self) -> str:
         now = time.localtime()
         return "%.4d/%.2d/%.2d %.2d:%.2d" % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min)
 
-    def insert_record(self, snumber, name):
+    def insert_record(self, snumber: str, name: str) -> object:
         self.output_csv.write("%s,%s,%s,%s\n" % (snumber, name, snumber + '@rmit.edu.au', self.get_time_str()))
         self.output_csv.flush()
 
@@ -112,7 +111,7 @@ class GCloudOCR:
     HEADERS = {'Content-Type': 'application/json'}
 
     @staticmethod
-    def format_image(image: str):
+    def format_image(image: bytes):
         return {
             'image': {'content': b64encode(image).decode()},
             "features": [
@@ -128,7 +127,7 @@ class GCloudOCR:
         }
 
     @staticmethod
-    def format_data(image: str):
+    def format_data(image: bytes):
         return json.dumps(
             {
                 'requests': [GCloudOCR.format_image(image)]
@@ -136,7 +135,7 @@ class GCloudOCR:
         )
 
     @staticmethod
-    def push(image: str) -> requests.api:
+    def push(image: bytes) -> requests.api:
         return requests.post(GCloudOCR.ENDPOINT,
                              data=GCloudOCR.format_data(image),
                              params={'key': GCloudOCR.AUTH},
