@@ -25,7 +25,7 @@ class Transcriber:
         self.output_csv = open(target, "w")
         self.output_csv.write("snumber,name,email,time\n")
 
-    def interp(self, content: str) -> tuple[str, str, str]:
+    def interp(self, content: str) -> object:
         snumber = None
         firstname = {
             'value': None,
@@ -100,7 +100,7 @@ class Transcriber:
         now = time.localtime()
         return "%.4d/%.2d/%.2d %.2d:%.2d" % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min)
 
-    def insert_record(self, snumber: str, name: str) -> object:
+    def insert_record(self, snumber: str, name: str) -> None:
         self.output_csv.write("%s,%s,%s,%s\n" % (snumber, name, snumber + '@rmit.edu.au', self.get_time_str()))
         self.output_csv.flush()
 
