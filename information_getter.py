@@ -22,7 +22,7 @@ class Transcriber:
         Transcriber.singleton = self
         # self.v_client = vision_api.ImageAnnotatorClient()
 
-        self.output_csv = open(target, "w")
+        self.output_csv = open(str(time.time()) + "_" + target, "w+")
         self.output_csv.write("snumber,name,email,time\n")
 
     def interp(self, content: str) -> object:
@@ -101,7 +101,7 @@ class Transcriber:
         return "%.4d/%.2d/%.2d %.2d:%.2d" % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min)
 
     def insert_record(self, snumber: str, name: str) -> None:
-        self.output_csv.write("%s,%s,%s,%s\n" % (snumber, name, snumber + '@rmit.edu.au', self.get_time_str()))
+        self.output_csv.write("%s,%s,%s,%s\n" % ('s' + snumber, name,'s' + snumber + '@student.rmit.edu.au', self.get_time_str()))
         self.output_csv.flush()
 
 
@@ -145,5 +145,5 @@ class GCloudOCR:
 
 class StudentCard:
     id = regex.compile('^(\d{7})$')
-    first_name = regex.compile('^((?!Expiry)[A-Z][a-z]+)$')
+    first_name = regex.compile('^((?!Expiry)[A-Z][a-z\-]+)$')
     last_name = regex.compile('^([A-Z\-]+)$')

@@ -20,7 +20,11 @@ def capture():
         if key == Config.capture_key:
             im_name = Config.temp_image_dir + '/temp_' + str(time.time()) + '.png'
             cv2.imwrite(im_name, image)
-            Transcriber.singleton.do(im_name)
+            try:
+                Transcriber.singleton.do(im_name)
+            except Exception as ex:
+                print("Failed, two first names?")
+
         if key == Config.exit_key:
             cv2.destroyAllWindows()
             return
