@@ -22,7 +22,7 @@ class Transcriber:
         Transcriber.singleton = self
         # self.v_client = vision_api.ImageAnnotatorClient()
 
-        self.output_csv = open(target, "w")
+        self.output_csv = open(str(time.time()) + target, "w+")
         self.output_csv.write("snumber,name,email,time\n")
 
     def interp(self, content: str) -> object:
@@ -56,7 +56,7 @@ class Transcriber:
         for annotation in content["responses"][0]["textAnnotations"]:
             if "locale" in annotation:
                 full_string = annotation["description"].split("\n")
-            text = annotation["description"]
+            text = annotation["description"]   
             # print(text)
             topleft_x = annotation['boundingPoly']["vertices"][0]["x"]
             topleft_y = annotation['boundingPoly']["vertices"][0]["y"]
