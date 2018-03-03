@@ -1,16 +1,12 @@
-import io
-import json
-import os
-
-# import google as google
-# import google.cloud.vision as vision_api
 import time
 
-# auth = google.discovery
-from base64 import b64encode
+import os
 
-import regex as regex
-import requests
+from Helpers import GCloudOCR, StudentCard
+
+import Exceptions
+from Types import TextField
+from config import Config
 
 
 class Transcriber:
@@ -18,17 +14,67 @@ class Transcriber:
 
     def __init__(self, target: str):
         if Transcriber.singleton is not None:
-            raise Exception("We are fucked")
+            raise Exceptions.BadObjectCreationException()
         Transcriber.singleton = self
-        # self.v_client = vision_api.ImageAnnotatorClient()
 
-        self.output_csv = open(str(time.time()) + "_" + target, "w+")
-        self.output_csv.write("snumber,name,email,time\n")
+        if not os.path.exists(target):
+            self.output_csv = open(target, "w")
+            self.output_csv.write("snumber,name,email,time\n")
+        elif os.path.isfile(target):
+            self.output_csv = open(target, 'a')
+
+    def find_snumber(self, content) -> TextField:
+        result = None
+
+        for annotation in content["responses"][0]["textAnnotations"]:
+            if "locale" in annotation:
+                continue
+            temp = TextField(annotation)
+            if StudentCard.id.match(temp.value) is not None:
+                if result is not None:
+                    raise Exceptions.UncertainMatchException()
+                result = temp
+        return result
+
+
+    def find_first_name(self, content, snumber: TextField) -> [TextField]:
+        names = []
+        name_count = 0
+        end_flag = False
+        while end_flag != False:
+            end_flag = True
+            for annotation in content["responses"][0]["textAnnotations"]:
+                if "locale" in annotation:
+                    continue
+                temp = TextField(annotation)
+                if name_count == 0:
+                    if snumber.bounds.bl()['x']-Config.word_gap <= temp.bounds.tl()['x'] <= snumber.bounds.bl()['x']+Config.word_gap  and \
+                        snumber.bounds.bl('y') <= temp.bounds.tl(['y']) <= snumber.bounds.bl()['y']+Config.word_gap*2:
+                        if len(names) != name_count:
+                            raise Exceptions.UncertainMatchException()
+                        names.append(temp)
+                        end_flag = False
+                else:
+                    last_bounds = names[name_count].bounds
+                    if last_bounds.tr('x') <= temp.bounds.tl('x') <= last_bounds.tr('x') +Config.word_gap  and \
+                        last_bounds.tr('y') - Config.word_gap/2 <= temp.bounds.tl('y') <= last_bounds.tr('y') + Config.word_gap/2 and\
+                        last_bounds.br('y') - Config.word_gap/2 <= temp.bounds.bl('y') <= last_bounds.br('y') + Config.word_gap/2:
+                        if len(names) != name_count:
+                            raise Exceptions.UncertainMatchException()
+                        names.append(temp)
+                        end_flag = False
+            name_count += end_flag
+
+
+
+
+
+
 
     def interp(self, content: str) -> object:
-        snumber = None
+        snumber =
         firstname = {
-            'value': None,
+            'values': None,
             'x': -1,
             'y': -1,
         }
@@ -83,7 +129,7 @@ class Transcriber:
             content = file.read()
         response = GCloudOCR.push(content)
         if response.status_code != 200:
-            print("Google Down? or the internet is disconnected... choose one")
+            print("Google Down? or the internet is disconnected... who knows?")
             print(response.status_code)
             print(response.content)
             return
@@ -93,57 +139,15 @@ class Transcriber:
         snumber, firstname, lastname = self.interp(data)
         if snumber is None or firstname is None or lastname is None:
             print("Failure: Null value")
-            return
+            return data
         self.insert_record(snumber, firstname + " " + lastname)
+        return data
 
     def get_time_str(self) -> str:
         now = time.localtime()
         return "%.4d/%.2d/%.2d %.2d:%.2d" % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min)
 
     def insert_record(self, snumber: str, name: str) -> None:
-        self.output_csv.write("%s,%s,%s,%s\n" % ('s' + snumber, name,'s' + snumber + '@student.rmit.edu.au', self.get_time_str()))
+        self.output_csv.write(
+            "%s,%s,%s,%s\n" % ('s' + snumber, name, 's' + snumber + '@student.rmit.edu.au', self.get_time_str()))
         self.output_csv.flush()
-
-
-class GCloudOCR:
-    ENDPOINT = 'https://vision.googleapis.com/v1/images:annotate'
-    AUTH = os.getenv('OCR_AUTH_KEY')
-    HEADERS = {'Content-Type': 'application/json'}
-
-    @staticmethod
-    def format_image(image: bytes):
-        return {
-            'image': {'content': b64encode(image).decode()},
-            "features": [
-                {
-                    "type": "TEXT_DETECTION"
-                }
-            ],
-            "imageContext": {
-                "languageHints": [
-                    "en"
-                ]
-            }
-        }
-
-    @staticmethod
-    def format_data(image: bytes):
-        return json.dumps(
-            {
-                'requests': [GCloudOCR.format_image(image)]
-            }
-        )
-
-    @staticmethod
-    def push(image: bytes) -> requests.api:
-        return requests.post(GCloudOCR.ENDPOINT,
-                             data=GCloudOCR.format_data(image),
-                             params={'key': GCloudOCR.AUTH},
-                             headers=GCloudOCR.HEADERS
-                             )
-
-
-class StudentCard:
-    id = regex.compile('^(\d{7})$')
-    first_name = regex.compile('^((?!Expiry)[A-Z][a-z\-]+)$')
-    last_name = regex.compile('^([A-Z\-]+)$')

@@ -13,3 +13,6 @@ class Config:
     window_name = "Camera"
     # whether the image the camera is sending back needs to be flipped
     should_flip = False
+    # boundary leniency; increase if you are getting invalid matches, decrease if you are getting
+    # lots of 'Uncertain match exceptions'
+    word_gap = 10

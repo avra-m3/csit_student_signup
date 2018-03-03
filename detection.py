@@ -21,7 +21,9 @@ def capture():
             im_name = Config.temp_image_dir + '/temp_' + str(time.time()) + '.png'
             cv2.imwrite(im_name, image)
             try:
-                Transcriber.singleton.do(im_name)
+                result = Transcriber.singleton.do(im_name)
+                with open(im_name + ".results.csv", "w+") as temp_f:
+                    temp_f.write(result)
             except Exception as ex:
                 print("Failed, two first names?")
 
