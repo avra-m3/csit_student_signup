@@ -46,7 +46,7 @@ def capture():
                 print(card.get_student_id())
                 print(card.get_names())
                 insert_record(card.get_student_id().get_value(), card.name_as_str())
-                
+
             except Exception as ex:
                 print(ex.args)
 

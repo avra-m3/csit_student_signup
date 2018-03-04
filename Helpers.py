@@ -44,10 +44,5 @@ class GCloudOCR:
                              )
 
 
-class StudentCard:
-    id = regex.compile('^(\d{7})$')
-    first_name = regex.compile('^((?!Expiry)[A-Z][a-z\-]+)$')
-    last_name = regex.compile('^([A-Z\-]+)$')
-
 def in_range(value: int, min: int, max: int):
     return min <= int <= max
