@@ -7,14 +7,10 @@ from config import Config
 from information_getter import Card
 
 
-def get_time_str() -> str:
-    now = time.localtime()
-    return "%.4d/%.2d/%.2d %.2d:%.2d" % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min)
-
-
 def insert_record(snumber: str, name: str) -> None:
+    now = time.localtime()
     output_csv.write(
-        "s%s,s%s@student.rmit.edu.au,%s,%s\n" % (snumber, name, snumber, self.get_time_str()))
+        "s%s,s%s@student.rmit.edu.au,%s,%s\n" % (snumber, name, snumber, "%.4d/%.2d/%.2d %.2d:%.2d" % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min)))
     output_csv.flush()
 
 
