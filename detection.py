@@ -1,9 +1,30 @@
-import time
-import cv2
 import os
+import time
+
+import cv2
 
 from config import Config
-from information_getter import Transcriber
+from information_getter import Card
+
+
+def get_time_str() -> str:
+    now = time.localtime()
+    return "%.4d/%.2d/%.2d %.2d:%.2d" % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min)
+
+
+def insert_record(snumber: str, name: str) -> None:
+    output_csv.write(
+        "s%s,s%s@student.rmit.edu.au,%s,%s\n" % (snumber, name, snumber, self.get_time_str()))
+    output_csv.flush()
+
+
+if not os.path.exists(Config.output_file):
+    output_csv = open(Config.output_file, "w")
+    output_csv.write("snumber,name,email,time\n")
+elif os.path.isfile(Config.output_file):
+    output_csv = open(Config.output_file, 'a')
+else:
+    raise IOError()
 
 
 def capture():
@@ -21,16 +42,18 @@ def capture():
             im_name = Config.temp_image_dir + '/temp_' + str(time.time()) + '.png'
             cv2.imwrite(im_name, image)
             try:
-                result = Transcriber.singleton.do(im_name)
-                with open(im_name + ".results.csv", "w+") as temp_f:
-                    temp_f.write(result)
+                card = Card(im_name)
+                print(card.get_student_id())
+                print(card.get_names())
+                insert_record(card.get_student_id().get_value(), card.name_as_str())
+                
             except Exception as ex:
-                print("Failed, two first names?")
+                print(ex.args)
 
         if key == Config.exit_key:
             cv2.destroyAllWindows()
             return
 
 
-Transcriber(Config.output_file)
 capture()
+output_csv.close()

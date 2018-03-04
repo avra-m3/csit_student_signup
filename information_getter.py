@@ -1,153 +1,95 @@
-import time
-
-import os
-
-from Helpers import GCloudOCR, StudentCard
-
 import Exceptions
-from Types import TextField
-from config import Config
+from Helpers import GCloudOCR
+from Types import StudentIDField, FirstNameField, LastNameField, TextField
 
 
-class Transcriber:
-    singleton = None
+class Card:
+    def __init__(self, path_to_card: str):
+        self.student_number = None
+        self.names = []
+        with open(path_to_card, "rb") as file:
+            content = file.read()
 
-    def __init__(self, target: str):
-        if Transcriber.singleton is not None:
-            raise Exceptions.BadObjectCreationException()
-        Transcriber.singleton = self
+        response = GCloudOCR.push(content)
 
-        if not os.path.exists(target):
-            self.output_csv = open(target, "w")
-            self.output_csv.write("snumber,name,email,time\n")
-        elif os.path.isfile(target):
-            self.output_csv = open(target, 'a')
+        with open(path_to_card + ".response.json", "w+") as log_file:
+            log_file.write(response.content)
 
-    def find_snumber(self, content) -> TextField:
+        if response.status_code == 200:
+            self.ocr_result = response.json()
+        else:
+            raise Exceptions.InvalidResponseException(response.content)
+
+    def get_text_results(self) -> list:
+        return self.ocr_result["responses"][0]["textAnnotations"][1:]
+
+    def get_student_id(self) -> StudentIDField:
+        if self.student_number is not None:
+            return self.student_number
+
         result = None
-
-        for annotation in content["responses"][0]["textAnnotations"]:
-            if "locale" in annotation:
-                continue
-            temp = TextField(annotation)
-            if StudentCard.id.match(temp.value) is not None:
+        for text_result in self.get_text_results():
+            id_field = StudentIDField(text_result)
+            if id_field.is_valid_field():
                 if result is not None:
                     raise Exceptions.UncertainMatchException()
-                result = temp
+                result = id_field
+        self.student_number = result
         return result
 
+    def get_names(self) -> [TextField]:
+        if len(self.names) == 0:
+            self.get_first_names()
+            self.get_last_names()
+        return self.names
 
-    def find_first_name(self, content, snumber: TextField) -> [TextField]:
-        names = []
-        name_count = 0
-        end_flag = False
-        while end_flag != False:
-            end_flag = True
-            for annotation in content["responses"][0]["textAnnotations"]:
-                if "locale" in annotation:
-                    continue
-                temp = TextField(annotation)
-                if name_count == 0:
-                    if snumber.bounds.bl()['x']-Config.word_gap <= temp.bounds.tl()['x'] <= snumber.bounds.bl()['x']+Config.word_gap  and \
-                        snumber.bounds.bl('y') <= temp.bounds.tl(['y']) <= snumber.bounds.bl()['y']+Config.word_gap*2:
-                        if len(names) != name_count:
-                            raise Exceptions.UncertainMatchException()
-                        names.append(temp)
-                        end_flag = False
-                else:
-                    last_bounds = names[name_count].bounds
-                    if last_bounds.tr('x') <= temp.bounds.tl('x') <= last_bounds.tr('x') +Config.word_gap  and \
-                        last_bounds.tr('y') - Config.word_gap/2 <= temp.bounds.tl('y') <= last_bounds.tr('y') + Config.word_gap/2 and\
-                        last_bounds.br('y') - Config.word_gap/2 <= temp.bounds.bl('y') <= last_bounds.br('y') + Config.word_gap/2:
-                        if len(names) != name_count:
-                            raise Exceptions.UncertainMatchException()
-                        names.append(temp)
-                        end_flag = False
-            name_count += end_flag
+    def get_first_names(self) -> None:
+        student_number_field = self.get_student_id()
+        last_result = False
 
-
-
-
-
-
-
-    def interp(self, content: str) -> object:
-        snumber =
-        firstname = {
-            'values': None,
-            'x': -1,
-            'y': -1,
-        }
-        lastname = {
-            'value': None,
-            'x': -1,
-            'y': -1,
-        }
-        full_string = []
-        for annotation in content["responses"][0]["textAnnotations"]:
-            if "locale" in annotation:
-                continue
-            text = annotation["description"]
-            print(text)
-            is_snumber = StudentCard.id.match(text) is not None
-            is_name = StudentCard.first_name.match(text) is not None
-            if text == "Expiry" or text == "Date":
-                continue
-            if is_snumber:
-                snumber = text
-            if is_name:
-                firstname['value'] = text
-                firstname['x'] = annotation['boundingPoly']["vertices"][0]["x"]
-                firstname['y'] = annotation['boundingPoly']["vertices"][0]["y"]
-        for annotation in content["responses"][0]["textAnnotations"]:
-            if "locale" in annotation:
-                full_string = annotation["description"].split("\n")
-            text = annotation["description"]
-            # print(text)
-            topleft_x = annotation['boundingPoly']["vertices"][0]["x"]
-            topleft_y = annotation['boundingPoly']["vertices"][0]["y"]
-            if StudentCard.last_name.match(text) is None:
-                # print(text + " invalid match")
-                continue
-            if topleft_x not in range(firstname['x'] - 10, firstname['x'] + 10):
-                # print(text + " not in range")
-                continue
-            if abs(lastname['y'] - firstname['y']) < abs(topleft_y - firstname['y']):
-                # print(text + " not closest match")
-                continue
-            lastname['value'] = text
-            lastname['x'] = topleft_x
-            lastname['y'] = topleft_y
-        print(snumber)
-        print(firstname['value'], lastname['value'])
-        # print(full_string)
-        return snumber, str(firstname['value']), str(lastname['value'])
-
-    def do(self, path: str):
-        # content = ""
-        with open(path, "rb") as file:
-            content = file.read()
-        response = GCloudOCR.push(content)
-        if response.status_code != 200:
-            print("Google Down? or the internet is disconnected... who knows?")
-            print(response.status_code)
-            print(response.content)
+        if student_number_field is None:
             return
-        # image_desc = None
-        # print(response.content)
-        data = response.json()
-        snumber, firstname, lastname = self.interp(data)
-        if snumber is None or firstname is None or lastname is None:
-            print("Failure: Null value")
-            return data
-        self.insert_record(snumber, firstname + " " + lastname)
-        return data
 
-    def get_time_str(self) -> str:
-        now = time.localtime()
-        return "%.4d/%.2d/%.2d %.2d:%.2d" % (now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min)
+        while last_result is not None:
+            last_result = None
+            for result in self.get_text_results():
+                first_name_field = FirstNameField(result)
+                if first_name_field.is_valid_field():
+                    if last_result is False:
+                        if student_number_field.is_above(first_name_field):
+                            self.names.append(first_name_field)
+                            last_result = first_name_field
+                    else:
+                        last_field = self.names[-1]
+                        if last_field.is_left_of(first_name_field):
+                            if last_result is not None:
+                                raise Exceptions.UncertainMatchException()
+                            self.names.append(first_name_field)
+                            last_result = first_name_field
 
-    def insert_record(self, snumber: str, name: str) -> None:
-        self.output_csv.write(
-            "%s,%s,%s,%s\n" % ('s' + snumber, name, 's' + snumber + '@student.rmit.edu.au', self.get_time_str()))
-        self.output_csv.flush()
+    def get_last_names(self) -> None:
+        last_result = self.names[0]
+        result_flag = True
+
+        while not result_flag:
+            result_flag = False
+            for result in self.get_text_results():
+                last_name_field = LastNameField(result)
+                if last_name_field.is_valid_field():
+                    if type(last_result) is FirstNameField:
+                        if last_result.is_above(last_name_field):
+                            self.names.append(last_name_field)
+                            last_result = last_name_field
+                            result_flag = True
+
+                    else:
+                        if last_result.is_left_of(last_name_field):
+                            self.names.append(last_name_field)
+                            last_result = last_name_field
+                            result_flag = True
+
+    def name_as_str(self) -> str:
+        result = ""
+        for name in self.names:
+            result += name.get_value().capitalize()
+        return result
