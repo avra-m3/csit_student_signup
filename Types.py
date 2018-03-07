@@ -1,56 +1,72 @@
 import json
+from typing import List
 
 import regex
+import sys
 
-from Exceptions import InvalidResponseException
 from config import Config
+
+# class Coord:
+#     def __init__(self, x = None, y = None):
+#         self._x = x
+#         self._y = y
+#
+#     def is_valid(self):
+#         return self.x() is None
+#
+#     def x(self):
+
 
 
 class BoundingBox:
     def __init__(self, data: json):
+        self._raw = data
+        self.is_valid = True
+
+        for vector in data:
+            if 'x' not in vector:
+                self.invalidate()
+            if 'y' not in vector:
+                self.invalidate()
         if len(data) != 4:
-            raise InvalidResponseException("Bounds: " + str(data))
-        self.topLeft, self.topRight, self.bottomLeft, self.bottomRight = data
-
-    def get_distance(self, other) -> tuple:
-        x = other.topLeft['x'] - self.topLeft['x']
-        y = other.topLeft['y'] - self.topLeft['y']
-        return x, y
-
-    def tl(self, value=None):
-        if value == 'x':
-            return self.topLeft['x']
-        elif value == 'y':
-            return self.topLeft['y']
+            self.invalidate()
         else:
-            return self.topLeft
+            self.topLeft, self.topRight, self.bottomRight, self.bottomLeft = data
 
-    def tr(self, value=None):
-        if value == 'x':
-            return self.topRight['x']
-        elif value == 'y':
-            return self.topRight['y']
-        else:
-            return self.topRight
+    def invalidate(self):
+        print("invalidated bounds: " + repr(self._raw))
+        self.is_valid = False
 
-    def bl(self, value=None):
-        if value == 'x':
-            return self.bottomLeft['x']
-        elif value == 'y':
-            return self.bottomLeft['y']
-        else:
-            return self.bottomLeft
+    def get_as_points(self):
+        if not self.is_valid:
+            return []
+        return [[self.tl('x'), self.tl('y')],
+                [self.tr('x'), self.tr('y')],
+                [self.br('x'), self.br('y')],
+                [self.bl('x'), self.bl('y')]
+                ]
 
-    def br(self, value=None):
-        if value == 'x':
-            return self.bottomRight['x']
-        elif value == 'y':
-            return self.bottomRight['y']
-        else:
-            return self.bottomRight
+    def _get_coord(self, coord, value=None)-> int or List[int]:
+        if not self.is_valid:
+            return -sys.maxsize - 1
+        if value is None:
+            return coord
+        return coord[value]
+
+    def tl(self, value=None) -> int or List[int]:
+        self._get_coord(self.topLeft, value)
+
+    def tr(self, value=None) -> int or List[int]:
+        self._get_coord(self.topRight, value)
+
+    def bl(self, value=None) -> int or List[int]:
+        self._get_coord(self.bottomLeft, value)
+
+    def br(self, value=None) -> int or List[int]:
+        self._get_coord(self.bottomRight, value)
 
     def __str__(self):
-        return "(%d,%d),(%d,%d),(%d,%d),(%d,%d)".format(*self.tl(), *self.tr(), *self.bl() * self.br())
+        return "Box(%s,%s,%s,%s)" % (str(self.tl()), str(self.tr()), str(self.bl()), str(self.br()))
 
 
 class TextField:
@@ -60,13 +76,16 @@ class TextField:
         self._raw = data
         self._bounds = None
         self.type = type
+        self.set_bounds(data)
 
     def get_value(self) -> str:
         return self._raw["description"]
 
+    def set_bounds(self, raw: dict):
+        print(raw)
+        self._bounds = BoundingBox(raw["boundingPoly"]["vertices"])
+
     def get_bounds(self) -> BoundingBox:
-        if self._bounds is None:
-            self._bounds = BoundingBox(self._raw["boundingPoly"]["vertices"])
         return self._bounds
 
     def get_field_type(self) -> str:
@@ -75,23 +94,49 @@ class TextField:
     def is_valid_field(self):
         if self.matcher is None:
             raise NotImplementedError()
-        return self.matcher.match(self.get_value()) is None
+        match = self.matcher.match(self.get_value())
+        if match is None:
+            return False
+        return match
+
+    def validate_boundries(self, field):
+        return self.get_bounds().is_valid or field.get_bounds().is_valid
 
     def is_above(self, field):
+        if not self.validate_boundries(field):
+            return False
         bounds = self.get_bounds()
-        return bounds.bl('x') - Config.word_gap <= field.get_bounds().tl('x') <= bounds.bl('x') + Config.word_gap and \
-               bounds.bl('y') <= field.get_bounds.tl('y') <= bounds.bl('y') + Config.word_gap * 2
+        return bounds.bl('x') - Config.word_distance_horizontal <= field.get_bounds().tl('x') <= bounds.bl(
+            'x') + Config.word_distance_horizontal and bounds.bl('y') < field.get_bounds().tl('y')
+        # and \
+        # bounds.bl('y') <= field.get_bounds().tl('y') <= bounds.bl('y') + Config.word_distance_vertical_max
+
+    def is_below(self, field):
+        if not self.validate_boundries(field):
+            return False
+        bounds = self.get_bounds()
+        return bounds.bl('x') - Config.word_distance_horizontal <= field.get_bounds().tl('x') <= bounds.bl(
+            'x') + Config.word_distance_horizontal and bounds.tl('y') - Config.word_distance_vertical_min > \
+               field.get_bounds().bl('y')
+        #    and \
+        #    bounds.tl('y') - Config.word_distance_vertical_min >= field.get_bounds().bl('y') >= bounds.tl(
+        # 'y') - Config.word_distance_vertical_max
 
     def is_left_of(self, field):
+        if not self.validate_boundries(field):
+            return False
         bounds = self.get_bounds()
-        return bounds.tr('x') <= field.get_bounds().tl('x') <= bounds.tr('x') + Config.word_gap and \
-               bounds.tr('y') - Config.word_gap / 2 <= field.get_bounds().tl('y') <= bounds.tr(
-            'y') + Config.word_gap / 2 \
-               and bounds.br('y') - Config.word_gap / 2 <= field.get_bounds().bl('y') <= bounds.br(
-            'y') + Config.word_gap / 2
+        return bounds.tr('x') < field.get_bounds().tl('x') < bounds.tr('x') + Config.word_distance_horizontal and \
+               bounds.tr('y') - Config.word_distance_horizontal / 2 < field.get_bounds().tl('y') < bounds.tr(
+            'y') + Config.word_distance_horizontal / 2 \
+               and bounds.br('y') - Config.word_distance_horizontal / 2 < field.get_bounds().bl('y') < bounds.br(
+            'y') + Config.word_distance_horizontal / 2
 
     def __str__(self):
-        return "%s(%s) at %s".format(self.get_field_type(), self.get_value(), self.get_bounds())
+        return self.get_value()
+
+    def __repr__(self):
+        return "%s(%s) at %s" % (self.get_field_type(), self.get_value(), self.get_bounds())
 
 
 class StudentIDField(TextField):
@@ -102,7 +147,7 @@ class StudentIDField(TextField):
 
 
 class FirstNameField(TextField):
-    matcher = regex.compile('^((?!Expiry)[A-Z][a-z\-]+)$')
+    matcher = regex.compile('^((?!Expiry)[A-Z][a-z]+\-?)+$')
 
     def __init__(self, data: json):
         super().__init__(data, "First Name")

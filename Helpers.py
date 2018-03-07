@@ -46,3 +46,7 @@ class GCloudOCR:
 
 def in_range(value: int, min: int, max: int):
     return min <= int <= max
+
+
+def debug_condition(p1: int, pc1: str, p2: int, pc2: str, p3: int):
+    print("%d %s %d %s %d " % (p1, pc1, p2, pc2, p3))

@@ -7,3 +7,6 @@ class BadObjectCreationException(RuntimeError):
 
 class UncertainMatchException(Exception):
     pass
+
+class NoMatchException(Exception):
+    pass

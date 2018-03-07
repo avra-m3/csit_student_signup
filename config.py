@@ -15,4 +15,7 @@ class Config:
     should_flip = False
     # boundary leniency; increase if you are getting invalid matches, decrease if you are getting
     # lots of 'Uncertain match exceptions'
-    word_gap = 10
+    word_distance_horizontal = 27
+
+    word_distance_vertical_max = 140
+    word_distance_vertical_min = 20
