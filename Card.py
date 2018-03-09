@@ -2,6 +2,7 @@ import json
 from typing import List
 
 import Exceptions
+import Helpers
 from Helpers import GCloudOCR
 from Types import StudentIDField, FirstNameField, LastNameField, TextField
 
@@ -12,6 +13,7 @@ class Card:
         self.student_number = None
         self.names = []
         self.ocr_result = None
+        self.valid_fields = []
 
         if path_to_image is not None:
             self.from_image(path_to_image)
@@ -38,10 +40,16 @@ class Card:
         if response.status_code == 200:
             self.ocr_result = response.json()
         else:
-            raise Exceptions.InvalidResponseException(response.content)
+            raise Exceptions.BadRequestResponse(response.status_code, response.content)
 
     def get_text_results(self) -> list:
         return self.ocr_result["responses"][0]["textAnnotations"][1:]
+
+    def get_field_results(self) -> List[TextField]:
+        return Helpers.json_to_field(self.get_text_results())
+
+    def get_valid_fields(self) -> List[TextField]:
+        return self.valid_fields
 
     def get_student_id(self) -> StudentIDField:
         if self.student_number is not None:
@@ -52,12 +60,12 @@ class Card:
             id_field = StudentIDField(text_result)
             if id_field.is_valid_field():
                 if result is not None:
-                    # print(result)
-                    raise Exceptions.UncertainMatchException()
+                    raise Exceptions.UncertainMatchException("StudentID", result, id_field)
                 result = id_field
         if result is None:
-            raise Exceptions.NoMatchException
+            raise Exceptions.NoMatchException("StudentID")
         self.student_number = result
+        self.valid_fields.append(result)
         return result
 
     def get_names(self) -> List[TextField]:
@@ -80,16 +88,19 @@ class Card:
                     if type(last_result) is StudentIDField:
                         if student_number_field.is_below(first_name_field):
                             self.names.append(first_name_field)
+                            self.valid_fields.append(first_name_field)
                             last_result = first_name_field
                             result_flag = True
                     else:
                         last_field = self.names[-1]
                         if last_field.is_left_of(first_name_field):
                             self.names.append(first_name_field)
+                            self.valid_fields.append(first_name_field)
                             last_result = first_name_field
                             result_flag = True
         if type(last_result) is StudentIDField:
-            raise Exceptions.NoMatchException()
+            raise Exceptions.NoMatchException("First Name")
+
 
     def get_last_names(self) -> None:
         last_result = self.names[0]
@@ -103,16 +114,18 @@ class Card:
                     if type(last_result) is FirstNameField:
                         if last_result.is_above(last_name_field):
                             self.names.append(last_name_field)
+                            self.valid_fields.append(last_name_field)
                             last_result = last_name_field
                             result_flag = True
 
                     else:
                         if last_result.is_left_of(last_name_field):
                             self.names.append(last_name_field)
+                            self.valid_fields.append(last_name_field)
                             last_result = last_name_field
                             result_flag = True
         if type(last_result) is FirstNameField:
-            raise Exceptions.NoMatchException()
+            raise Exceptions.NoMatchException("Last Name")
 
     def name_as_str(self) -> str:
         return " ".join(map(lambda x: x.get_value().capitalize(), self.get_names()))

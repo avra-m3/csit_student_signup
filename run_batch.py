@@ -1,14 +1,9 @@
+import os
 import time
 
-import os
-
-import cv2
-import numpy as np
-
 from Card import Card
-from config import Config
+import Config
 
-import traceback as tb
 
 def insert_record(snumber: str, name: str) -> None:
     now = time.localtime()
@@ -16,6 +11,7 @@ def insert_record(snumber: str, name: str) -> None:
         "s%s,%s,s%s@student.rmit.edu.au,%s\n" % (snumber, name, snumber, "%.4d/%.2d/%.2d %.2d:%.2d" % (
             now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min)))
     output_csv.flush()
+
 
 Config.output_file = "batch_" + Config.output_file
 if not os.path.exists(Config.output_file):
@@ -25,7 +21,6 @@ elif os.path.isfile(Config.output_file):
     output_csv = open(Config.output_file, 'w')
 else:
     raise IOError()
-
 
 im_name = 'im_cache_temp\\csit_student_signup\\image_cache\\temp_1519863144.8123555.png'
 for item in os.listdir('image_cache'):
