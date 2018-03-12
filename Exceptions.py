@@ -24,6 +24,24 @@ class BadRequestResponse(Exception):
         })
 
 
+class BadJSONResponse(Exception):
+    STR_MESSAGE = "Third party client returned an unexpected json response"
+
+    def __init__(self, content: json):
+        super().__init__({
+            "message": self.STR_MESSAGE,
+            "error values": content
+        })
+
+
+class EmptyJSONResponse(Exception):
+    STR_MESSAGE = "Third party client returned an empty json response"
+
+    def __init__(self):
+        super().__init__({
+            "message": self.STR_MESSAGE
+        })
+
 class UncertainMatchException(Exception):
     STR_MESSAGE = "Found 2 or more fields matching the parameters expected of field: %s"
 

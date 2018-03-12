@@ -45,6 +45,10 @@ class Card:
             raise Exceptions.BadRequestResponse(response.status_code, response.content)
 
     def get_text_results(self) -> list:
+        if "responses" not in self.ocr_result:
+            raise Exceptions.BadJSONResponse(self.ocr_result)
+        if len(self.ocr_result["responses"]) == 0:
+            raise Exceptions.EmptyJSONResponse()
         return self.ocr_result["responses"][0]["textAnnotations"][1:]
 
     def get_field_results(self) -> List[TextField]:

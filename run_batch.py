@@ -22,4 +22,6 @@ def process(file_name):
 pre_setup()
 for file in os.listdir("image_cache"):
     if file.endswith(".png.response.json"):
-        process(file.strip(".png.response.json"))
+        path = file.strip(".png.response.json")
+        if os.path.exists("image_cache/" + path + ".png"):
+            process(path)
