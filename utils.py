@@ -111,7 +111,7 @@ def output_card_to_image(card: Card, image):
             cv2.imshow(Config.window_name, image)
         except (UncertainMatchException, NoMatchException):
             highlight_fields(image, card.get_field_results(), Config.Colors.failure)
-            highlight_fields(image, card.get_valid_fields(), Config.Colors.success, True)
+            highlight_fields(image, card.get_valid_fields(), Config.Colors.success, True) 
     except BadBoundingException:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         highlight_fields(image, card.get_valid_fields(), Config.Colors.failure, True)
