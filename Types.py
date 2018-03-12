@@ -3,7 +3,6 @@ from typing import List
 
 import regex
 import Config
-import Exceptions
 
 from Exceptions import BadBoundingException
 

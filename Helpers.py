@@ -3,7 +3,6 @@ import os
 from base64 import b64encode
 
 import cv2
-import regex as regex
 import requests
 import time
 
@@ -82,8 +81,11 @@ def display_fields(image, fields, colour, show_text=False):
         except TypeError:
             print(bounds)
 
-def insert_record(output_csv,snumber: str, name: str) -> None:
+
+def insert_record(output_csv, card) -> None:
     now = time.localtime()
+    snumber = card.get_student_id()
+    name = card.name_as_str()
     output_csv.write(
         "s%s,%s,s%s@student.rmit.edu.au,%s\n" % (snumber, name, snumber, "%.4d/%.2d/%.2d %.2d:%.2d" % (
             now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min)))

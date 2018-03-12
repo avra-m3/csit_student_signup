@@ -9,6 +9,7 @@ from Card import Card
 import traceback as tb
 import numpy as np
 
+from Helpers import json_to_field
 from Types import TextField
 
 
@@ -18,14 +19,6 @@ from Types import TextField
 #         "s%s,%s,s%s@student.rmit.edu.au,%s\n" % (snumber, name, snumber, "%.4d/%.2d/%.2d %.2d:%.2d" % (
 #             now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min)))
 #     output_csv.flush()
-
-
-def json_to_field(image, list, colour, show_text=False):
-    field_list = []
-    for field in list:
-        field_list.append(TextField(field, "Generic"))
-    # display_fields(image, field_list, colour, show_text)
-    return field_list
 
 
 def display_fields(image, fields, colour, show_text=False):
@@ -85,8 +78,7 @@ def test(file_name):
 
     except Exception:
         tb.print_exc()
-        convert_and_display_json(image, all_values, Config.Colors.failure, True)
-        display_fields(image, valid_fields, Config.Colors.success)
+        display_fields(image, car, Config.Colors.success)
 
         cv2.imshow(Config.window_name, image)
         cv2.waitKey(0)

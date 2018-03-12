@@ -1,6 +1,6 @@
 import json
 
-from Types import TextField
+# from Types import TextField
 
 
 class BadBoundingException(Exception):
@@ -27,7 +27,7 @@ class BadRequestResponse(Exception):
 class UncertainMatchException(Exception):
     STR_MESSAGE = "Found 2 or more fields matching the parameters expected of field: %s"
 
-    def __init__(self, field_name: str, param1: TextField, param2: TextField):
+    def __init__(self, field_name: str, param1, param2):
         super().__init__(
             {"message": self.STR_MESSAGE % field_name,
              "error values": [param1, param2]
