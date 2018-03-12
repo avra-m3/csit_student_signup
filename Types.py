@@ -15,7 +15,7 @@ class BoundingBox:
         self.points = []
         for vector in data:
             if len(vector) != 2:
-                raise BadBoundingException
+                raise BadBoundingException(data)
             self.points.append(list(vector.values()))
 
     def get_as_points(self):

@@ -15,6 +15,7 @@ class Card:
         self.names = []
         self.ocr_result = None
         self.valid_fields = []
+        self.all_fields = []
 
         if path_to_image is not None:
             self.from_image(path_to_image)
@@ -47,7 +48,10 @@ class Card:
         return self.ocr_result["responses"][0]["textAnnotations"][1:]
 
     def get_field_results(self) -> List[TextField]:
-        return utils.json_to_field(self.get_text_results())
+        if len(self.all_fields) == 0:
+            for field in self.get_text_results():
+                self.all_fields.append(TextField(field, "Generic"))
+        return self.all_fields
 
     def get_valid_fields(self) -> List[TextField]:
         return self.valid_fields

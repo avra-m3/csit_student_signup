@@ -18,4 +18,5 @@ def test(file_name):
     wait_for_user()
 
 
+pre_setup()
 test("temp_1519862956.5715106")

@@ -10,14 +10,7 @@ import numpy as np
 import Config
 from Card import Card
 from Exceptions import BadRequestResponse, UncertainMatchException, NoMatchException, BadBoundingException
-from Types import TextField
 
-
-def json_to_field(list):
-    field_list = []
-    for field in list:
-        field_list.append(TextField(field, "Generic"))
-    return field_list
 
 
 def highlight_fields(image, fields, colour, show_text=False):
@@ -110,14 +103,15 @@ def process_JSON(path_to_json: json) -> Card:
 
 def output_card_to_image(card: Card, image):
     try:
-        card.get_student_id()
-        card.get_names()
-        highlight_fields(image, card.get_field_results(), Config.Colors.neutral)
-        highlight_fields(image, card.get_valid_fields(), Config.Colors.success, True)
-        cv2.imshow(Config.window_name, image)
-    except (UncertainMatchException, NoMatchException):
-        highlight_fields(image, card.get_field_results(), Config.Colors.failure)
-        highlight_fields(image, card.get_valid_fields(), Config.Colors.success, True)
+        try:
+            card.get_student_id()
+            card.get_names()
+            highlight_fields(image, card.get_field_results(), Config.Colors.neutral)
+            highlight_fields(image, card.get_valid_fields(), Config.Colors.success, True)
+            cv2.imshow(Config.window_name, image)
+        except (UncertainMatchException, NoMatchException):
+            highlight_fields(image, card.get_field_results(), Config.Colors.failure)
+            highlight_fields(image, card.get_valid_fields(), Config.Colors.success, True)
     except BadBoundingException:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         highlight_fields(image, card.get_valid_fields(), Config.Colors.failure, True)
