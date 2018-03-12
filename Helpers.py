@@ -2,7 +2,6 @@ import json
 import os
 from base64 import b64encode
 
-import regex as regex
 import requests
 
 
@@ -44,5 +43,4 @@ class GCloudOCR:
                              )
 
 
-def in_range(value: int, min: int, max: int):
-    return min <= int <= max
+
