@@ -29,6 +29,7 @@
 
 # Requirements.txt:
 You should only require the following, but my virtual environment was clutered, so the extra libraries may be required
+
     numpy==1.14.1
     opencv-python==3.2.0.6
     regex==2018.2.21
