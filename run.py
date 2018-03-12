@@ -25,3 +25,5 @@ while user_in != Config.exit_key:
         if user_in == Config.capture_key:
             insert_record(output, card)
 cv2.detroyAllWindows()
+
+
