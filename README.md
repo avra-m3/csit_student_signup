@@ -1,11 +1,11 @@
 
-What you need:
+# What you need:
 
     OCR_AUTH_KEY =  an environment variable, which is a google API key
     Install all files from requirements.txt using pip
 
 
-Configuration options:
+# Configuration options:
 
     # if there is more than one camera and you have the wrong one, change this.
     target_camera = 0
@@ -26,3 +26,10 @@ Configuration options:
     word_distance_horizontal = 27
     # size of response text
     result_text_scale = 1
+
+# Requirements.txt:
+You should only require the following, but my virtual environment was clutered, so the extra libraries may be required
+    numpy==1.14.1
+    opencv-python==3.2.0.6
+    regex==2018.2.21
+    requests==2.18.4
