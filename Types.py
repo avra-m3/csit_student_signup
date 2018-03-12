@@ -14,6 +14,8 @@ class BoundingBox:
         self.topLeft, self.topRight, self.bottomRight, self.bottomLeft = data
         self.points = []
         for vector in data:
+            if len(vector) != 2:
+                raise BadBoundingException
             self.points.append(list(vector.values()))
 
     def get_as_points(self):
@@ -21,7 +23,7 @@ class BoundingBox:
 
     @staticmethod
     def _safely_get_param(param: dict, value: str = None) -> int or List[int]:
-        if value != "x" or value != "y":
+        if value != 'x' and value != 'y':
             return param
         if type(param) is not dict or len(param) != 2:
             raise TypeError(param)
@@ -74,27 +76,25 @@ class TextField:
 
     def is_above(self, field):
         bounds = self.get_bounds()
-        return bounds.bl('x') - Config.word_distance_horizontal <= field.get_bounds().tl('x') <= bounds.bl(
-            'x') + Config.word_distance_horizontal and bounds.bl('y') < field.get_bounds().tl('y')
-        # and \
-        # bounds.bl('y') <= field.get_bounds().tl('y') <= bounds.bl('y') + Config.word_distance_vertical_max
+        min_x = bounds.bl('x') - Config.word_distance_horizontal
+        max_x = bounds.bl('x') + Config.word_distance_horizontal
+        return min_x <= field.get_bounds().tl('x') <= max_x and bounds.bl('y') < field.get_bounds().tl('y')
 
     def is_below(self, field):
         bounds = self.get_bounds()
-        return bounds.bl('x') - Config.word_distance_horizontal <= field.get_bounds().tl('x') <= bounds.bl(
-            'x') + Config.word_distance_horizontal and bounds.tl('y') - Config.word_distance_vertical_min > \
-               field.get_bounds().bl('y')
-        #    and \
-        #    bounds.tl('y') - Config.word_distance_vertical_min >= field.get_bounds().bl('y') >= bounds.tl(
-        # 'y') - Config.word_distance_vertical_max
+        min_x = bounds.bl('x') - Config.word_distance_horizontal
+        max_x = bounds.bl('x') + Config.word_distance_horizontal
+        return min_x <= field.get_bounds().tl('x') <= max_x and bounds.tl('y') - field.get_bounds().bl('y')
 
     def is_left_of(self, field):
         bounds = self.get_bounds()
+        min_y_1 = bounds.tr('y') - Config.word_distance_horizontal / 2
+        max_y_1 = bounds.tr('y') + Config.word_distance_horizontal / 2
+        min_y_2 = bounds.br('y') - Config.word_distance_horizontal / 2
+        max_y_2 = bounds.br('y') + Config.word_distance_horizontal / 2
+
         return bounds.tr('x') < field.get_bounds().tl('x') < bounds.tr('x') + Config.word_distance_horizontal and \
-               bounds.tr('y') - Config.word_distance_horizontal / 2 < field.get_bounds().tl('y') < bounds.tr(
-            'y') + Config.word_distance_horizontal / 2 \
-               and bounds.br('y') - Config.word_distance_horizontal / 2 < field.get_bounds().bl('y') < bounds.br(
-            'y') + Config.word_distance_horizontal / 2
+             min_y_1 < field.get_bounds().tl('y') < max_y_1 and min_y_2 < field.get_bounds().bl('y') < max_y_2
 
     def __str__(self):
         return self.get_value()

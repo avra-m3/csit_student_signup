@@ -3,6 +3,7 @@ from typing import List
 
 import Exceptions
 import Helpers
+import utils
 from Helpers import GCloudOCR
 from Types import StudentIDField, FirstNameField, LastNameField, TextField
 
@@ -46,7 +47,7 @@ class Card:
         return self.ocr_result["responses"][0]["textAnnotations"][1:]
 
     def get_field_results(self) -> List[TextField]:
-        return Helpers.json_to_field(self.get_text_results())
+        return utils.json_to_field(self.get_text_results())
 
     def get_valid_fields(self) -> List[TextField]:
         return self.valid_fields
