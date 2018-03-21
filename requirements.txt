@@ -1,17 +1,4 @@
-beautifulsoup4==4.6.0
-cachetools==2.0.1
-certifi==2018.1.18
-chardet==3.0.4
-grpcio==1.9.1
-idna==2.6
 numpy==1.14.1
 opencv-python==3.2.0.6
-protobuf==3.5.1
-pyasn1==0.4.2
-pyasn1-modules==0.2.1
-pytz==2018.3
 regex==2018.2.21
 requests==2.18.4
-rsa==3.4.2
-six==1.11.0
-urllib3==1.22
