@@ -2,7 +2,6 @@ import json
 import os
 import time
 import traceback as tb
-from typing import Tuple
 
 import cv2
 import numpy as np
@@ -10,7 +9,6 @@ import numpy as np
 import Config
 from Card import Card
 from Exceptions import BadRequestResponse, UncertainMatchException, NoMatchException, BadBoundingException
-
 
 
 def highlight_fields(image, fields, colour, show_text=False):
@@ -31,28 +29,6 @@ def highlight_fields(image, fields, colour, show_text=False):
             print(bounds)
     return image
 
-
-def insert_record(output_csv, card) -> None:
-    now = time.localtime()
-    snumber = card.get_student_id()
-    name = card.name_as_str()
-    output_csv.write(
-        "s%s,%s,s%s@student.rmit.edu.au,%s\n" % (snumber, name, snumber, "%.4d/%.2d/%.2d %.2d:%.2d" % (
-            now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min)))
-    output_csv.flush()
-
-
-def open_or_create_files():
-    if not os.path.exists(Config.output_file):
-        output_csv = open(Config.output_file, "w")
-        output_csv.write("snumber,name,email,time\n")
-    elif os.path.isfile(Config.output_file):
-        output_csv = open(Config.output_file, 'a+')
-    else:
-        raise IOError()
-    if not os.path.isdir(Config.temp_image_dir):
-        os.mkdir(Config.temp_image_dir)
-    return output_csv
 
 
 def get_camera():
@@ -111,7 +87,7 @@ def output_card_to_image(card: Card, image):
             cv2.imshow(Config.window_name, image)
         except (UncertainMatchException, NoMatchException):
             highlight_fields(image, card.get_field_results(), Config.Colors.failure)
-            highlight_fields(image, card.get_valid_fields(), Config.Colors.success, True) 
+            highlight_fields(image, card.get_valid_fields(), Config.Colors.success, True)
     except BadBoundingException:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         highlight_fields(image, card.get_valid_fields(), Config.Colors.failure, True)

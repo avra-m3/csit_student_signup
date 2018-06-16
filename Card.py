@@ -2,8 +2,6 @@ import json
 from typing import List
 
 import Exceptions
-import Helpers
-import utils
 from Helpers import GCloudOCR
 from Types import StudentIDField, FirstNameField, LastNameField, TextField
 
@@ -109,7 +107,6 @@ class Card:
                             result_flag = True
         if type(last_result) is StudentIDField:
             raise Exceptions.NoMatchException("First Name")
-
 
     def get_last_names(self) -> None:
         last_result = self.names[0]

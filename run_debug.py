@@ -1,7 +1,7 @@
 import cv2
 
 import Config
-from utils import open_or_create_files, get_camera, wait_for_user, capture, process_JSON, output_card_to_image, cv2_init
+from functions import open_or_create, get_camera, wait_for_user, capture, process_JSON, output_card_to_image, cv2_init
 
 
 def pre_setup():
