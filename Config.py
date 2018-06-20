@@ -1,4 +1,6 @@
 # if there is more than one camera and you have the wrong one, change this.
+from utilities.templates import OutputObject
+
 target_camera = 0
 # change this if you don't want it to capture when you press space
 capture_key = 32
@@ -10,16 +12,13 @@ window_name = "Camera"
 should_flip = False
 # boundary leniency; increase if you are getting invalid matches, decrease if you are getting
 # lots of 'Uncertain match exceptions'
-word_distance_horizontal = 27
-
-word_distance_vertical_max = 140
-word_distance_vertical_min = 20
+word_leniency = 27
 
 # size of response text
 result_text_scale = 1
 
 
-class OutputFormat:
+class OutputFormat(OutputObject):
     """
         This class is passed to all i/o functions, it contains a set of variables that defines the formatting of output.
         Some variables in this class are string formats with access to the following variables:

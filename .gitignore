@@ -6,6 +6,7 @@ venv/*
 #ignore test images
 *.jpg
 *output.csv
+/cache
 
 
 #ignore python3 dll
