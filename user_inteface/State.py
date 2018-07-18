@@ -36,6 +36,18 @@ class State:
         return cv2.imencode('.png', self.frame)[1].tostring()
 
     @property
+    def im_debug(self):
+        if self.debug_frame is None:
+            return None
+        return cv2.imencode('.png', self.debug_frame)[1].tostring()
+
+    @property
+    def im_result(self):
+        if self.result_frame is None:
+            return None
+        return cv2.imencode('.png', self.result_frame)[1].tostring()
+
+    @property
     def status(self):
         return self._status
 
@@ -66,6 +78,8 @@ class State:
         self.debug_frame, success, bounds = barcode.detect(self.frame)
         if success > -1:
             self.status = STATES.DETECT
+        else:
+            self.status = STATES.MONITOR
 
     def get_card(self):
         self.result_frame = None
@@ -84,6 +98,9 @@ class State:
             return self.status == other
         else:
             return False
+
+    def __str__(self):
+        return self.status
 
     def __enter__(self):
         return self

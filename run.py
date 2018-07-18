@@ -19,17 +19,18 @@ from utilities.Cursor import Cursor
 def demo():
     root = Tk()
     with State(cv2.VideoCapture(Config.target_camera)) as state:
-        window = Window(root, Config)
+        window = Window(root)
 
         def tick(e=None):
             state.snap()
             if state == STATES.CAPTURE:
                 # state.dim_frame()
-                window.update_camera(state.frame)
+                window.update_camera(state.frame, None)
+                root.after(10, tick)
                 return
 
-            window.update_camera(state.frame)
             state.find_barcode()
+            window.update_camera(state.frame, state.debug_frame)
             if state == STATES.DETECT and state.modified < datetime.now() - timedelta(seconds=2):
                 root.after(2, process)
             root.after(10, tick)
@@ -43,7 +44,7 @@ def demo():
             def inner():
                 state.get_card()
                 if state == STATES.SUCCESS:
-                    window.update_result(state)
+                    window.update_result(state.card, state.result_frame, success=save, cancel=do_abort)
 
             proc = Thread(target=inner)
             proc.start()
@@ -52,6 +53,7 @@ def demo():
             if state == STATES.SUCCESS:
                 io.insert_record(Config.OutputFormat, state.card)
             state.reset_lifecycle()
+            window.reset()
 
         def do_action(e=None):
             if state == STATES.SUCCESS:
@@ -61,6 +63,7 @@ def demo():
 
         def do_abort(e=None):
             state.reset_lifecycle()
+            window.reset()
 
         root.bind("<space>", do_action)
         root.bind("esc", do_action)

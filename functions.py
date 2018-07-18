@@ -1,9 +1,19 @@
 import cv2
 import numpy as np
+from PIL import Image
 
 import Config
 from Card import Card
-from Exceptions import UncertainMatchException, NoMatchException, BadBoundingException
+from Exceptions import BadBoundingException
+
+
+def cv_2_pil(im):
+    if im is None:
+        return None
+    im = im.copy()
+    cv = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+
+    return Image.fromarray(cv)
 
 
 def highlight_fields(image, fields, colour, show_text=False):

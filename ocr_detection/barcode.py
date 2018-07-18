@@ -61,8 +61,9 @@ def detect(image):
     cv2.drawContours(image, [box], 0, (0, 255, 0), 2)
     cv2.putText(image, '{},{}'.format(max_bounds[2], max_bounds[3]), (10, 50),
                 cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (0, 255, 0), 5)
-    cv2.imshow("", closed)
-    return image, max_index, max_bounds
+    closed = cv2.cvtColor(closed, cv2.COLOR_GRAY2RGB)
+
+    return closed, max_index, max_bounds
 
 
 def optimise(image, barcode):
