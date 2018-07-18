@@ -1,7 +1,7 @@
 # if there is more than one camera and you have the wrong one, change this.
 from utilities.templates import OutputObject
 
-target_camera = 0
+target_camera = 1
 # change this if you don't want it to capture when you press space
 capture_key = 32
 # change this if you dont want the program to quit when you press esc

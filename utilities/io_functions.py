@@ -29,7 +29,7 @@ def validate_entry(entry: dict, config: OutputObject) -> bool:
     return True
 
 
-def insert_record(card, config: OutputObject) -> bool:
+def insert_record(config, card) -> bool:
     """
     Insert a record into the output file defined in config
     :param card: The card to write
@@ -82,7 +82,7 @@ def init(config) -> None:
     :return: None
     """
     create_backup_dir(config)
-    create_csv(config)
+    # create_csv(config)
 
 
 def cache_image(image, config: OutputObject) -> str:

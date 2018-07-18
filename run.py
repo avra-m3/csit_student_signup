@@ -1,77 +1,103 @@
 import argparse
 import os
 import traceback
+from datetime import datetime, timedelta
 from threading import Thread
 from tkinter import *
-
-import cv2
 
 import Config
 import utilities.io_functions as io
 from Card import Card
-from functions import output_card_to_image, capture_2
+from functions import output_card_to_image
+from ocr_detection import barcode, recognise
+from ocr_detection.barcode import *
+from user_inteface.State import State, STATES
 from user_inteface.window import Window
 from utilities.Cursor import Cursor
 
 
 def demo():
     root = Tk()
-    w = Window(root, Config)
-    camera = cv2.VideoCapture(Config.target_camera)
+    with State(cv2.VideoCapture(Config.target_camera)) as state:
+        window = Window(root, Config)
 
-    def update_camera():
-        if camera.isOpened():
-            status, img = capture_2(camera)
-            w.update_camera(img)
-        root.after(10, update_camera)
+        def tick(e=None):
+            state.snap()
+            if state == STATES.CAPTURE:
+                # state.dim_frame()
+                window.update_camera(state.frame)
+                return
 
-    def update_capture(event=None):
-        image = w.last_capture
-        w.update_result(image)
+            window.update_camera(state.frame)
+            state.find_barcode()
+            if state == STATES.DETECT and state.modified < datetime.now() - timedelta(seconds=2):
+                root.after(2, process)
+            root.after(10, tick)
 
-        def complete():
-            b = cv2.imencode('.png', image)[1].tostring()
-            card = Card.from_image(Config.OutputFormat, b)
-            if card is not None:
-                revised = output_card_to_image(card, image)
-                w.on_result_update(card, revised)
+        def process(e=None):
+            if state == STATES.CAPTURE:
+                return
+            state.status = STATES.CAPTURE
+            window.update_prelim(state.frame)
 
-        Thread(target=complete).start()
+            def inner():
+                state.get_card()
+                if state == STATES.SUCCESS:
+                    window.update_result(state)
 
-    def on_save():
-        if w.label_info is not None:
-            io.insert_record(Config.OutputFormat(), w.label_info.card)
-        w.on_continue()
+            proc = Thread(target=inner)
+            proc.start()
 
-    w.on_save = on_save
+        def save(e=None):
+            if state == STATES.SUCCESS:
+                io.insert_record(Config.OutputFormat, state.card)
+            state.reset_lifecycle()
 
-    root.bind("<space>", update_capture)
+        def do_action(e=None):
+            if state == STATES.SUCCESS:
+                save()
+            if state in (STATES.MONITOR, STATES.DETECT):
+                process()
 
-    root.after(10, update_camera)
-    root.mainloop()
-    camera.release()
+        def do_abort(e=None):
+            state.reset_lifecycle()
+
+        root.bind("<space>", do_action)
+        root.bind("esc", do_action)
+
+        root.after(10, tick)
+        root.mainloop()
 
 
 def debug(args):
     root = Tk()
     w = Window(root, Config)
-    camera = cv2.VideoCapture(Config.target_camera)
+    # camera = cv2.VideoCapture(Config.target_camera)
 
     cursor = Cursor(max=len(args))
 
-    def update_camera():
-        if camera.isOpened():
-            status, img = capture_2(camera)
-            w.update_camera(img)
-        root.after(5, update_camera)
+    # def update_camera():
+    #     if camera.isOpened():
+    #         status, img = capture_2(camera)
+    #         w.update_camera(img)
+    #     root.after(5, update_camera)
 
     def update_capture(event=None):
         image_path, json_path = io.path_from_id(Config.OutputFormat(), args[cursor.index])
-        image = cv2.imread(image_path)
-        card = Card.from_json_file(Config.OutputFormat(), json_path)
+        while not os.path.exists(json_path):
+            cursor.increment()
+            image_path, json_path = io.path_from_id(Config.OutputFormat(), args[cursor.index])
 
-        image = output_card_to_image(card, image)
-        w.on_result_update(card, image)
+        image = cv2.imread(image_path)
+        bcimage, success, bounds = barcode.detect(image.copy())
+        w.update_camera(bcimage)
+        # card = Card.from_json_file(Config.OutputFormat(), json_path)
+        # image = output_card_to_image(card, image)
+        if success != -1:
+            image = optimise(image, bounds)
+            recognise.do(image)
+
+        w.update_prelim(image)
 
         cursor.increment()
 
@@ -80,9 +106,9 @@ def debug(args):
 
     root.bind("<space>", update_capture)
 
-    root.after(1, update_camera)
+    # root.after(1, update_camera)
     root.mainloop()
-    camera.release()
+    # camera.release()
 
 
 def batch(target):
@@ -108,14 +134,14 @@ def batch(target):
     def update_capture(event=None):
         path, _ = io.path_from_id(Config.OutputFormat(), images[cursor.index])
         image = cv2.imread(path)
-        w.update_result(image)
+        w.update_prelim(image)
 
         def complete():
             b = cv2.imencode('.png', image)[1].tostring()
             card = Card.from_image(Config.OutputFormat, b)
             if card is not None:
                 revised = output_card_to_image(card, image)
-                w.on_result_update(card, revised)
+                w.update_result(card, revised)
 
         cursor.increment()
         Thread(target=complete).start()
@@ -133,19 +159,78 @@ def batch(target):
     root.mainloop()
 
 
-parser = argparse.ArgumentParser(description='Process RMIT student cards and output their attributes to a CSV file.')
-mode = parser.add_mutually_exclusive_group(required=False)
-mode.add_argument('-b', '--batch', help="Parse all images in the directory given")
-mode.add_argument('-d', '--debug', nargs=argparse.REMAINDER, help="Run the listed images in replay/debug mode")
+def dev():
+    root = Tk()
+    w = Window(root, Config)
 
-files = parser.parse_args()
+    # camera = cv2.VideoCapture(Config.target_camera)
 
-if files.debug:
-    debug(files.debug)
-elif files.batch:
-    batch(files.batch)
-else:
-    try:
-        demo()
-    except BaseException as ignored:
-        traceback.print_exc()
+    def update_camera():
+        # if camera.isOpened():
+        img = cv2.imread("./cache/20180624224050.temp.png")
+        image, success, bounds = barcode.detect(img.copy())
+        img = detect_card(img)
+        # if success > -1:
+        #     optimal = optimise(image, bounds)
+        w.update_prelim(image)
+        w.update_camera(img)
+        # root.after(10, update_camera)
+
+    def update_capture(event=None):
+        image = w.last_capture
+        w.update_prelim(image)
+
+        def complete():
+            b = cv2.imencode('.png', image)[1].tostring()
+            card = Card.from_image(Config.OutputFormat, b)
+            if card is not None:
+                revised = output_card_to_image(card, image)
+                w.update_result(card, revised)
+
+        # Thread(target=complete).start()
+
+    def on_save():
+        if w.label_info is not None:
+            io.insert_record(Config.OutputFormat(), w.label_info.card)
+        w.on_continue()
+
+    def on_continue():
+        w.hide_result()
+
+    w.on_save = on_save
+
+    root.bind("<space>", on_continue)
+
+    root.after(10, update_camera)
+    root.mainloop()
+    # camera.release()
+
+
+def get_args():
+    parser = argparse.ArgumentParser(
+        description='Process RMIT student cards and output their attributes to a CSV file.')
+    mode = parser.add_mutually_exclusive_group(required=False)
+    mode.add_argument('-b', '--batch', help="Parse all images in the directory given")
+    mode.add_argument('-d', '--debug', nargs=argparse.REMAINDER, help="Run the listed images in replay/debug mode")
+    mode.add_argument('--dev', action="store_true", help="Run the program in development mode")
+
+    return parser.parse_args()
+
+
+def run():
+    args = get_args()
+    # print(args)
+    if args.debug:
+        debug(args.debug)
+    elif args.batch:
+        batch(args.batch)
+    elif args.dev:
+        dev()
+    else:
+        try:
+            demo()
+        except Exception as ignored:
+            traceback.print_exc()
+
+
+run()

@@ -3,8 +3,6 @@ import tkinter as tk
 import cv2
 from PIL import Image, ImageTk
 
-from Exceptions import UncertainMatchException, NoMatchException
-
 
 class Window(tk.Frame):
     def __init__(self, master, config, **kw):
@@ -52,7 +50,7 @@ class Window(tk.Frame):
         self.camera.configure(image=image)
         self.camera.image = image
 
-    def update_result(self, result_image) -> None:
+    def update_prelim(self, result_image) -> None:
         """
         Call this function with a cv2 image to update the "result" image
         Will create a label for the result if one does not exist.
@@ -86,15 +84,21 @@ class Window(tk.Frame):
             self.label_info = None
         self.set_camera(self.camera.raw)
 
-    def on_result_update(self, card, image) -> None:
+    def update_result(self, state, image=None) -> None:
         """
         Update Image and card information
+        :param state:
         :param card: A Card object used to get information about the result
         :param image: The cv2 image to display
         :return: None
         """
+        if image is None:
+            image = state.frame
+            card = state.card
+        else:
+            card = state
         self.hide_result()
-        self.update_result(image)
+        self.update_prelim(image)
         self.btn_continue = tk.Button(self, text="Continue", command=self.on_continue)
         if self.on_save is not None:
             self.btn_save = tk.Button(self, text="Save Record", command=self.on_save)

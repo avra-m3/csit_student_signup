@@ -1,7 +1,13 @@
-imutils
-Pillow
+certifi==2018.4.16
+chardet==3.0.4
+idna==2.6
+imutils==0.4.6
 numpy==1.14.1
 opencv-python==3.2.0.6
+Pillow==5.1.0
+pytesseract==0.2.2
+pyzbar==0.1.7
 regex==2018.2.21
 requests==2.18.4
-pytesseract
+urllib3==1.22
+tensorflow-gpu
