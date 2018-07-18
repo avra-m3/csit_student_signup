@@ -33,7 +33,7 @@ class OutputFormat(OutputObject):
     # How each entry should be formatted
     rows = ["{student_id}", "{name}", "{student_id}@student.rmit.edu.au", "{date}"]
     # Only allow unique rows to be added to the output csv
-    enforce_unique = True
+    enforce_unique = False
     # If enforce_unique is set to true, the primary key field should be set to the value you want to be unique
     primary_key = columns[0]
     # The directory where images captured will be saved to.

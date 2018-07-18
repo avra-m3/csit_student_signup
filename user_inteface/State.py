@@ -20,7 +20,7 @@ class State:
     def __init__(self, camera):
         self.camera = camera
 
-        self._status = None
+        self._status = "starting"
         self.last_state_change = None
 
         self.frame = None
@@ -85,7 +85,7 @@ class State:
         self.result_frame = None
         self.card = Card.from_image(Config.OutputFormat, self.image)
         if self.card is not None:
-            self.result_frame = output_card_to_image(self.card, self.frame.copy)
+            self.result_frame = output_card_to_image(self.card, self.frame)
             self.status = STATES.SUCCESS
         else:
             self.reset_lifecycle()
@@ -100,7 +100,7 @@ class State:
             return False
 
     def __str__(self):
-        return self.status
+        return self.status[0].upper() + self.status[1:]
 
     def __enter__(self):
         return self

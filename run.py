@@ -15,7 +15,7 @@ from user_inteface.State import State, STATES
 from user_inteface.window import Window
 from utilities.Cursor import Cursor
 
-
+# TODO: Investigate records not being saved to CSV
 def demo():
     root = Tk()
     with State(cv2.VideoCapture(Config.target_camera)) as state:
@@ -23,6 +23,7 @@ def demo():
 
         def tick(e=None):
             state.snap()
+            window.output.update_status(state)
             if state == STATES.CAPTURE:
                 # state.dim_frame()
                 window.update_camera(state.frame, None)

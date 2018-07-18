@@ -50,7 +50,8 @@ def insert_record(config, card) -> bool:
     entry = dict(zip(config.columns, row))
     if validate_entry(entry, config):
         with open(config.file, "a") as output:
-            file = csv.DictWriter(f=output, fieldnames=config.columns, dialect=csv.excel)
+            file = csv.DictWriter(output, fieldnames=config.columns, dialect=csv.excel)
+            print(entry)
             file.writerow(entry)
         return True
     return False
