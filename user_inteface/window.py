@@ -58,7 +58,7 @@ class OutputPane(tk.Frame):
         self._status.set(str(state))
 
     def update_image(self, image: Image):
-        image.thumbnail((self.winfo_screenwidth() / 2, self.winfo_screenheight() * .75), Image.ANTIALIAS)
+        image.thumbnail((700, 400), Image.ANTIALIAS)
         self._image = ImageTk.PhotoImage(image)
         self.im_label.configure(image=self._image)
         self.im_label.grid()
@@ -82,8 +82,8 @@ class RecordPanel(tk.Frame):
         self.id_label = tk.Label(self.output_panel, textvariable=self._id, justify="left")
         self.nm_label = tk.Label(self.output_panel, textvariable=self._name, justify=tk.LEFT)
 
-        self.save_icon.thumbnail((80, 70), Image.ANTIALIAS)
-        self.remove_icon.thumbnail((80, 70), Image.ANTIALIAS)
+        self.save_icon.thumbnail((80, 80), Image.ANTIALIAS)
+        self.remove_icon.thumbnail((80, 80), Image.ANTIALIAS)
 
         self._sv_icn = ImageTk.PhotoImage(self.save_icon)
         self._rm_icn = ImageTk.PhotoImage(self.remove_icon)
