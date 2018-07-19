@@ -5,7 +5,8 @@ from pyzbar import pyzbar
 
 
 def detect(image):
-    # Convert to grayscale
+    if image is None:
+        return None
     # Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -55,12 +56,12 @@ def detect(image):
             max_index = i
             max_bounds_raw = ((c_x, c_y), (max_dim, min_dim), angle)
 
-    cv2.drawContours(image, refCnts, max_index, (0, 255, 0), 3)
-    box = cv2.boxPoints(max_bounds_raw)
-    box = np.int0(box)
-    cv2.drawContours(image, [box], 0, (0, 255, 0), 2)
-    cv2.putText(image, '{},{}'.format(max_bounds[2], max_bounds[3]), (10, 50),
-                cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (0, 255, 0), 5)
+    # cv2.drawContours(image, refCnts, max_index, (0, 255, 0), 3)
+    # box = cv2.boxPoints(max_bounds_raw)
+    # box = np.int0(box)
+    # cv2.drawContours(image, [box], 0, (0, 255, 0), 2)
+    # cv2.putText(image, '{},{}'.format(max_bounds[2], max_bounds[3]), (10, 50),
+    #             cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (0, 255, 0), 5)
     closed = cv2.cvtColor(closed, cv2.COLOR_GRAY2RGB)
 
     return closed, max_index, max_bounds

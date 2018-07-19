@@ -75,11 +75,12 @@ class State:
             self.frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
 
     def find_barcode(self):
-        self.debug_frame, success, bounds = barcode.detect(self.frame)
-        if success > -1:
-            self.status = STATES.DETECT
-        else:
-            self.status = STATES.MONITOR
+        if self != STATES.ERRORED:
+            self.debug_frame, success, bounds = barcode.detect(self.frame)
+            if success > -1:
+                self.status = STATES.DETECT
+            else:
+                self.status = STATES.MONITOR
 
     def get_card(self):
         self.result_frame = None
