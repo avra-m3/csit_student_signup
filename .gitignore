@@ -3,9 +3,12 @@ venv/*
 .idea/*
 .gitignore
 
-#ignore test images
+#ignore instance-specific images
 *.jpg
+*.png
+*.csv
 *output.csv
+/cache
 
 
 #ignore python3 dll

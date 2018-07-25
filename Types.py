@@ -76,25 +76,25 @@ class TextField:
 
     def is_above(self, field):
         bounds = self.get_bounds()
-        min_x = bounds.bl('x') - Config.word_distance_horizontal
-        max_x = bounds.bl('x') + Config.word_distance_horizontal
+        min_x = bounds.bl('x') - Config.word_leniency
+        max_x = bounds.bl('x') + Config.word_leniency
         return min_x <= field.get_bounds().tl('x') <= max_x and bounds.bl('y') < field.get_bounds().tl('y')
 
     def is_below(self, field):
         bounds = self.get_bounds()
-        min_x = bounds.bl('x') - Config.word_distance_horizontal
-        max_x = bounds.bl('x') + Config.word_distance_horizontal
+        min_x = bounds.bl('x') - Config.word_leniency
+        max_x = bounds.bl('x') + Config.word_leniency
         return min_x <= field.get_bounds().tl('x') <= max_x and bounds.tl('y') - field.get_bounds().bl('y')
 
     def is_left_of(self, field):
         bounds = self.get_bounds()
-        min_y_1 = bounds.tr('y') - Config.word_distance_horizontal / 2
-        max_y_1 = bounds.tr('y') + Config.word_distance_horizontal / 2
-        min_y_2 = bounds.br('y') - Config.word_distance_horizontal / 2
-        max_y_2 = bounds.br('y') + Config.word_distance_horizontal / 2
+        min_y_1 = bounds.tr('y') - Config.word_leniency / 2
+        max_y_1 = bounds.tr('y') + Config.word_leniency / 2
+        min_y_2 = bounds.br('y') - Config.word_leniency / 2
+        max_y_2 = bounds.br('y') + Config.word_leniency / 2
 
-        return bounds.tr('x') < field.get_bounds().tl('x') < bounds.tr('x') + Config.word_distance_horizontal and \
-             min_y_1 < field.get_bounds().tl('y') < max_y_1 and min_y_2 < field.get_bounds().bl('y') < max_y_2
+        return bounds.tr('x') < field.get_bounds().tl('x') < bounds.tr('x') + Config.word_leniency and \
+               min_y_1 < field.get_bounds().tl('y') < max_y_1 and min_y_2 < field.get_bounds().bl('y') < max_y_2
 
     def __str__(self):
         return self.get_value()
