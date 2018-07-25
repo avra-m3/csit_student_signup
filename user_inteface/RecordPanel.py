@@ -29,7 +29,6 @@ class RecordPanel(tk.Frame):
 
         self._sv_icn = ImageTk.PhotoImage(self.save_icon)
         self._rm_icn = ImageTk.PhotoImage(self.remove_icon)
-        self.md_button = tk.Button(self, text="Modify", state=tk.DISABLED)
         self.sv_button = tk.Button(self, image=self._sv_icn)
         self.cc_button = tk.Button(self, image=self._rm_icn)
 
@@ -90,13 +89,12 @@ class RecordPanel(tk.Frame):
         self.id = ""
         self.sv_button.configure(state=tk.DISABLED)
         self.cc_button.configure(state=tk.DISABLED)
-        self.md_button.configure(state=tk.DISABLED)
         self.id_label.configure(state=tk.DISABLED)
         self.nm_label_f.configure(state=tk.DISABLED)
 
-    def set(self, name, id, success, failure):
+    def set(self, name, sid, success, failure):
         self.name = name
-        self.id = id
+        self.id = sid
 
         self.sv_button.configure(command=lambda: success(*self.name, self.id), state=tk.NORMAL)
         self.cc_button.configure(command=failure, state=tk.NORMAL)
