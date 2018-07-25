@@ -1,7 +1,7 @@
 # if there is more than one camera and you have the wrong one, change this.
 from utilities.templates import OutputObject
 
-target_camera = 0
+target_camera = 1
 # change this if you don't want it to capture when you press space
 capture_key = 32
 # change this if you dont want the program to quit when you press esc
@@ -33,7 +33,7 @@ class OutputFormat(OutputObject):
     # How each entry should be formatted
     rows = ["{student_id}", "{name}", "{student_id}@student.rmit.edu.au", "{date}"]
     # Only allow unique rows to be added to the output csv
-    enforce_unique = False
+    enforce_unique = True
     # If enforce_unique is set to true, the primary key field should be set to the value you want to be unique
     primary_key = columns[0]
     # The directory where images captured will be saved to.

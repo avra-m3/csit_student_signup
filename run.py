@@ -1,5 +1,6 @@
 import argparse
 import os
+import time
 import traceback
 from datetime import datetime, timedelta
 from threading import Thread
@@ -8,7 +9,7 @@ from tkinter import *
 import Config
 import utilities.io_functions as io
 from Card import Card
-from functions import output_card_to_image
+from functions import output_card_to_image, cv_2_pil
 from ocr_detection import barcode, recognise
 from ocr_detection.barcode import *
 from user_inteface.State import State, STATES
@@ -19,7 +20,7 @@ from utilities.Cursor import Cursor
 # TODO: Investigate records not being saved to CSV
 def demo():
     root = Tk()
-    with State(cv2.VideoCapture(Config.target_camera)) as state:
+    with State(camera=cv2.VideoCapture(Config.target_camera)) as state:
         window = Window(root)
 
         def tick(e=None):
@@ -36,7 +37,7 @@ def demo():
                 root.after(10, tick)
                 return
             window.update_camera(state.frame, state.debug_frame)
-            if state == STATES.DETECT and state.modified < datetime.now() - timedelta(seconds=2):
+            if state == STATES.DETECT and state.modified < datetime.now() - timedelta(seconds=1):
                 root.after(2, process)
             root.after(10, tick)
 
@@ -57,9 +58,12 @@ def demo():
 
             proc = Thread(target=inner)
             proc.start()
+            # inner()
 
-    def save(e=None):
+    def save(firstname=None, lastname=None, sid=None):
         if state == STATES.SUCCESS:
+            if None not in (firstname, lastname, sid):
+                io.insert_row(Config.OutputFormat, "{} {}".format(firstname, lastname), sid, )
             io.insert_record(Config.OutputFormat, state.card)
         state.reset_lifecycle()
         window.reset()
@@ -129,7 +133,7 @@ def batch(target):
               os.path.isfile(target + "/" + path) and path.endswith(".temp.png")]
 
     root = Tk()
-    w = Window(root, Config)
+    w = Window(root)
 
     cursor = Cursor(max=len(images), overflow=False)
 
@@ -140,7 +144,8 @@ def batch(target):
             id = images[cursor.index + 1]
         path, _ = io.path_from_id(Config.OutputFormat(), id)
         image = cv2.imread(path)
-        w.update_camera(image)
+        debug_frame, success, bounds = barcode.detect(image)
+        w.update_camera(image, debug_frame)
         root.after(250, update_camera)
 
     def update_capture(event=None):
@@ -150,21 +155,32 @@ def batch(target):
 
         def complete():
             b = cv2.imencode('.png', image)[1].tostring()
-            card = Card.from_image(Config.OutputFormat, b)
-            if card is not None:
-                revised = output_card_to_image(card, image)
-                w.update_result(card, revised)
+            # card = Card.from_image(Config.OutputFormat, b)
+            card = Card.from_json_file(Config.OutputFormat, _)
 
-        cursor.increment()
+            if card is not None:
+                def save(firstname=None, lastname=None, sid=None):
+                    print("Saving...")
+                    override = time.strftime("%Y/%m/%d %H:%M", time.localtime(os.path.getctime(path)))
+                    if None in (firstname, lastname, sid):
+
+                        if not io.insert_record(Config.OutputFormat(), card, override):
+                            print("Not Saved")
+                    else:
+                        io.insert_row(Config.OutputFormat, "{} {}".format(firstname, lastname), sid, override)
+                    next()
+
+                revised = output_card_to_image(card, image)
+
+                w.update_result(card, cv_2_pil(revised), save, next)
+
         Thread(target=complete).start()
 
-    def save():
-        if w.label_info is not None:
-            io.insert_record(Config.OutputFormat(), w.label_info.card)
+    def next():
+        cursor.increment()
+        update_capture()
 
-    w.on_save = save
-
-    root.bind("<space>", update_capture)
+    root.bind("<space>", next)
 
     root.after(1, update_camera)
     root.after(10, update_capture)
@@ -181,7 +197,7 @@ def dev():
         # if camera.isOpened():
         img = cv2.imread("./cache/20180624224050.temp.png")
         image, success, bounds = barcode.detect(img.copy())
-        img = detect_card(img)
+        # img = detect_card(img)
         # if success > -1:
         #     optimal = optimise(image, bounds)
         w.update_prelim(image)

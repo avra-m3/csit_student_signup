@@ -59,7 +59,8 @@ def output_card_to_image(card: Card, image):
         else:
             highlight_fields(image, card.get_field_results(), Config.Colors.failure, True)
             highlight_fields(image, card.get_valid_fields(), Config.Colors.success, True)
-    except BadBoundingException:
+    except (BadBoundingException, IndexError):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
         highlight_fields(image, card.get_valid_fields(), Config.Colors.failure, True)
     return image

@@ -19,7 +19,6 @@ class STATES:
 class State:
     def __init__(self, camera):
         self.camera = camera
-
         self._status = "starting"
         self.last_state_change = None
 
@@ -28,6 +27,9 @@ class State:
         self.result_frame = None
 
         self.card = None
+        self.snap()
+        print(camera.isOpened())
+        print(camera.read())
 
     @property
     def image(self):
@@ -107,4 +109,5 @@ class State:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.camera.release()
+        # self.camera.release()
+        pass

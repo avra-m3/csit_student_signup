@@ -29,22 +29,12 @@ def validate_entry(entry: dict, config: OutputObject) -> bool:
     return True
 
 
-def insert_record(config, card) -> bool:
-    """
-    Insert a record into the output file defined in config
-    :param card: The card to write
-    :param config: The configuration, an OutputFormat object
-    :return: None
-    """
-    if not os.path.isfile(config.file):
-        create_csv(config)
-
-    now = time.localtime()
+def insert_row(config, name, sid, insert_time) -> bool:
     row = [
         entry.format(
-            student_id=card.get_student_id(),
-            name=card.get_name(),
-            date=time.strftime("%Y/%m/%d %H:%M", now)
+            student_id=sid,
+            name=name,
+            date=insert_time
         ) for entry in config.rows
     ]
     entry = dict(zip(config.columns, row))
@@ -55,6 +45,21 @@ def insert_record(config, card) -> bool:
             file.writerow(entry)
         return True
     return False
+
+
+def insert_record(config, card, override_time=None) -> bool:
+    """
+    Insert a record into the output file defined in config
+    :param override_time: override the insert time with a string object
+    :param card: The card to write
+    :param config: The configuration, an OutputFormat object
+    :return: None
+    """
+    if not os.path.isfile(config.file):
+        create_csv(config)
+
+    now = time.localtime()
+    return insert_row(config, card.get_name(), card.get_student_id(), override_time or now)
 
 
 def create_csv(config: OutputObject) -> None:

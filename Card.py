@@ -29,11 +29,26 @@ class Card:
             return Card(response.json())
         return None
 
+    @property
+    def firstname(self):
+        return " ".join([str(x).capitalize() for x in self.get_names() if isinstance(x, FirstNameField)]) or None
+
+    @property
+    def lastname(self):
+        return " ".join([str(x).capitalize() for x in self.get_names() if isinstance(x, LastNameField)]) or None
+
+    @property
+    def names(self):
+        return [x for x in self.__valid__ if isinstance(x, LastNameField) or isinstance(x, FirstNameField)]
+
+    @property
+    def fullname(self):
+        return " ".join([str(x).capitalize() for x in self.get_names()]) or None
+
     def __init__(self, json: json):
 
         self.errors = None
         self.student_number = None
-        self.names = []
         self.json = json
         self.__valid__ = []
         self.__all__ = []
@@ -105,14 +120,12 @@ class Card:
                     if first_name_field.is_valid_field():
                         if type(last_result) is StudentIDField:
                             if student_number_field.is_below(first_name_field):
-                                self.names.append(first_name_field)
                                 self.__valid__.append(first_name_field)
                                 last_result = first_name_field
                                 result_flag = True
                         else:
                             last_field = self.names[-1]
                             if last_field.is_left_of(first_name_field):
-                                self.names.append(first_name_field)
                                 self.__valid__.append(first_name_field)
                                 last_result = first_name_field
                                 result_flag = True
@@ -130,14 +143,12 @@ class Card:
                     if last_name_field.is_valid_field():
                         if type(last_result) is FirstNameField:
                             if last_result.is_above(last_name_field):
-                                self.names.append(last_name_field)
                                 self.__valid__.append(last_name_field)
                                 last_result = last_name_field
                                 result_flag = True
 
                         else:
                             if last_result.is_left_of(last_name_field):
-                                self.names.append(last_name_field)
                                 self.__valid__.append(last_name_field)
                                 last_result = last_name_field
                                 result_flag = True
