@@ -156,7 +156,7 @@ def batch(target):
         def complete():
             b = cv2.imencode('.png', image)[1].tostring()
             # card = Card.from_image(Config.OutputFormat, b)
-            card = Card.from_json_file(Config.OutputFormat, _)
+            card = Card.from_json_file(_)
 
             if card is not None:
                 def save(firstname=None, lastname=None, sid=None):
