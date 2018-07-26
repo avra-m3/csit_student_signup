@@ -62,7 +62,7 @@ class Card:
 
     @property
     def student_id(self):
-        return " ".join([str(x) for x in self.fields if isinstance(x, StudentIDField)]) or None
+        return self._student_id and str(self._student_id)
 
     @property
     def _student_id(self):
