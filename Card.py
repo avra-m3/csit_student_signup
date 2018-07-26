@@ -57,7 +57,9 @@ class Card:
         self.validate()
         if self.is_valid():
             self._populate_all()
+        if self.is_valid():
             self._populate_student_id()
+        if self.is_valid():
             self._populate_names()
 
     @property
@@ -125,7 +127,7 @@ class Card:
             temp_field = StudentIDField(field.raw)
             if temp_field.is_valid_field():
                 if result is not None:
-                    raise Exceptions.UncertainMatchException("StudentID", result, temp_field)
+                    self.errors = Exceptions.UncertainMatchException("StudentID", result, temp_field)
                 result = temp_field
                 result_old = field
         if result is None:
@@ -144,6 +146,10 @@ class Card:
         if student_number_field is None:
             return
 
+        """
+        First Name
+        """
+
         valid_fields = []
         head_fields = []
         for field in self.fields:
@@ -157,7 +163,7 @@ class Card:
                         valid_fields.append(new_field)
 
         if not head_fields:
-            raise Exceptions.NoMatchException("First Name")
+            self.errors = Exceptions.NoMatchException("First Name")
 
         def get_sort_order(f):
             return student_number_field.v_distance_to(f)
@@ -198,7 +204,7 @@ class Card:
                         valid_fields.append(new_field)
 
         if not head_fields:
-            raise Exceptions.NoMatchException("Last Name")
+            self.errors = Exceptions.NoMatchException("Last Name")
 
         def get_sort_order(f):
             return head.v_distance_to(f)
