@@ -59,7 +59,7 @@ def insert_record(config, card, override_time=None) -> bool:
         create_csv(config)
 
     now = time.localtime()
-    return insert_row(config, card.get_name(), card.get_student_id(), override_time or now)
+    return insert_row(config, card.fullname, card.student_id, override_time or now)
 
 
 def create_csv(config: OutputObject) -> None:
