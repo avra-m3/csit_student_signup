@@ -10,4 +10,4 @@ pyzbar==0.1.7
 regex==2018.2.21
 requests==2.18.4
 urllib3==1.22
-tensorflow-gpu
+tkinter
