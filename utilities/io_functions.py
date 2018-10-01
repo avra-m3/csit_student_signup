@@ -29,7 +29,9 @@ def validate_entry(entry: dict, config: OutputObject) -> bool:
     return True
 
 
-def insert_row(config, name, sid, insert_time) -> bool:
+def insert_row(config, name, sid, insert_time=time.localtime()) -> bool:
+    if type(insert_time) is not str:
+        insert_time = time.strftime("", insert_time)
     row = [
         entry.format(
             student_id=sid,
@@ -59,7 +61,7 @@ def insert_record(config, card, override_time=None) -> bool:
         create_csv(config)
 
     now = time.localtime()
-    return insert_row(config, card.get_name(), card.get_student_id(), override_time or now)
+    return insert_row(config, card.fullname, card.student_id, override_time or now)
 
 
 def create_csv(config: OutputObject) -> None:

@@ -18,15 +18,15 @@ def cv_2_pil(im):
 
 def highlight_fields(image, fields, colour, show_text=False):
     for field in fields:
-        bounds = field.get_bounds()
+        bounds = field.bounds
         try:
-            cv2.polylines(image, np.int32([np.array(bounds.get_as_points())]), 1, colour)
+            cv2.polylines(image, np.int32([np.array(bounds.points())]), 1, colour)
             if show_text:
                 cv2.putText(image, field.get_value() + "(" + field.get_field_type() + ")",
-                            (bounds.br('x') + 5, bounds.br('y')),
+                            (bounds.br.x + 5, bounds.br.y),
                             cv2.FONT_HERSHEY_COMPLEX_SMALL, .5, Config.Colors.outline, 2)
                 cv2.putText(image, field.get_value() + "(" + field.get_field_type() + ")",
-                            (bounds.br('x') + 5, bounds.br('y')),
+                            (bounds.br.x + 5, bounds.br.y),
                             cv2.FONT_HERSHEY_COMPLEX_SMALL, .5, Config.Colors.neutral, 1)
         except ValueError:
             print("Value Error: " + field)
@@ -51,13 +51,11 @@ def capture(cam):
 
 def output_card_to_image(card: Card, image):
     try:
-        card.get_student_id()
-        card.get_names()
         if card.is_valid():
-            highlight_fields(image, card.get_field_results(), Config.Colors.neutral)
+            highlight_fields(image, card.fields, Config.Colors.neutral)
             highlight_fields(image, card.get_valid_fields(), Config.Colors.success, True)
         else:
-            highlight_fields(image, card.get_field_results(), Config.Colors.failure, True)
+            highlight_fields(image, card.fields, Config.Colors.failure, True)
             highlight_fields(image, card.get_valid_fields(), Config.Colors.success, True)
     except (BadBoundingException, IndexError):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)

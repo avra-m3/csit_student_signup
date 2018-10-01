@@ -30,7 +30,7 @@ class Window(tk.Frame):
             self.reset()
             return
 
-        self.record.set((card.firstname, card.lastname), card.get_student_id(), success, cancel)
+        self.record.set((card.firstname, card.lastname), card.student_id, success, cancel)
         self.output.update_image(image)
 
     def reset(self):
