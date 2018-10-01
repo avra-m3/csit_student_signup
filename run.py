@@ -1,17 +1,49 @@
 import argparse
 import os
+
+def get_args():
+    parser = argparse.ArgumentParser(
+        description='Process RMIT student cards and output their attributes to a CSV file.')
+    mode = parser.add_mutually_exclusive_group(required=False)
+    mode.add_argument('-b', '--batch', help="Parse all images in the directory given")
+    mode.add_argument('-d', '--debug', nargs=argparse.REMAINDER, help="Run the listed images in replay/debug mode")
+    mode.add_argument('--dev', action="store_true", help="Run the program in development mode")
+    if not os.getenv("OCR_AUTH_KEY"):
+        parser.add_argument("gcloud_token", help="Required when the OCR_AUTH_KEY environment var is not present")
+    else:
+        parser.add_argument("--gcloud_token", help="Required when the OCR_AUTH_KEY environment var is not present")
+    return parser.parse_args()
+
+
+def args_to_env():
+    args = get_args()
+    if args.gcloud_token:
+        os.putenv("OCR_AUTH_KEY", args.gcloud_token)
+
+
+"""
+This needs to be at the top of the file otherwise the environment change will not propagate.
+"""
+if __name__ == '__main__':
+    args_to_env()
+
+""" Native Python Libs"""
 import time
 import traceback
 from datetime import datetime, timedelta
 from threading import Thread
 from tkinter import *
 
+""" Third party Libraries """
+import cv2
+
+
+""" Local file imports """
 import Config
 import utilities.io_functions as io
 from Card import Card
 from functions import output_card_to_image, cv_2_pil
-from ocr_detection import barcode, recognise
-from ocr_detection.barcode import *
+from ocr_detection import barcode
 from user_inteface.State import State, STATES
 from user_inteface.window import Window
 from utilities.Cursor import Cursor
@@ -87,7 +119,7 @@ def demo():
 
 def debug(args):
     root = Tk()
-    w = Window(root, Config)
+    w = Window(root)
     # camera = cv2.VideoCapture(Config.target_camera)
 
     cursor = Cursor(max=len(args))
@@ -110,8 +142,8 @@ def debug(args):
         # card = Card.from_json_file(Config.OutputFormat(), json_path)
         # image = output_card_to_image(card, image)
         if success != -1:
-            image = optimise(image, bounds)
-            recognise.do(image)
+            image = barcode.optimise(image, bounds)
+            # recognise.do(image)
 
         w.update_prelim(image)
 
@@ -232,17 +264,6 @@ def dev():
     root.after(10, update_camera)
     root.mainloop()
     # camera.release()
-
-
-def get_args():
-    parser = argparse.ArgumentParser(
-        description='Process RMIT student cards and output their attributes to a CSV file.')
-    mode = parser.add_mutually_exclusive_group(required=False)
-    mode.add_argument('-b', '--batch', help="Parse all images in the directory given")
-    mode.add_argument('-d', '--debug', nargs=argparse.REMAINDER, help="Run the listed images in replay/debug mode")
-    mode.add_argument('--dev', action="store_true", help="Run the program in development mode")
-
-    return parser.parse_args()
 
 
 def run():

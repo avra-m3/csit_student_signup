@@ -1,7 +1,7 @@
 import cv2
 import imutils
-import numpy as np
-from pyzbar import pyzbar
+# import numpy as np
+# from pyzbar import pyzbar
 
 
 def detect(image):
@@ -96,24 +96,24 @@ def optimise(image, barcode):
 
     return rotated
 
-
-def detect_v2(frame):
-    # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    frame = imutils.resize(frame, width=400)
-    barcodes = pyzbar.decode(frame)
-    success = False
-    for barcode in barcodes:
-        polygon = barcode.polygon
-        barcodeType = barcode.type
-        barcodeData = barcode.data.decode("utf-8")
-
-        if barcodeType != "CODE39" or len(barcodeData) != 14:
-            continue
-
-        success = True
-
-        cv2.polylines(frame, np.array(polygon, np.int32), False, (0, 0, 255))
-        text = "{} ({})".format(len(barcodeData), barcodeType)
-        cv2.putText(frame, text, 0, cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5, (0, 0, 255), 2)
-    return frame, success, None
+#
+# def detect_v2(frame):
+#     # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#     frame = imutils.resize(frame, width=400)
+#     barcodes = pyzbar.decode(frame)
+#     success = False
+#     for barcode in barcodes:
+#         polygon = barcode.polygon
+#         barcodeType = barcode.type
+#         barcodeData = barcode.data.decode("utf-8")
+#
+#         if barcodeType != "CODE39" or len(barcodeData) != 14:
+#             continue
+#
+#         success = True
+#
+#         cv2.polylines(frame, np.array(polygon, np.int32), False, (0, 0, 255))
+#         text = "{} ({})".format(len(barcodeData), barcodeType)
+#         cv2.putText(frame, text, 0, cv2.FONT_HERSHEY_SIMPLEX,
+#                     0.5, (0, 0, 255), 2)
+#     return frame, success, None

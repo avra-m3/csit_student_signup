@@ -1,15 +1,13 @@
 # ignore config files
-venv/*
-.idea/*
+venv
+dist
+build
+.idea
 .gitignore
 
-#ignore instance-specific images
-*.jpg
-*.png
-*.csv
+#ignore output files
+cache
 *output.csv
-/cache
-
 
 #ignore python3 dll
 python3.dll
