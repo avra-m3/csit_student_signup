@@ -29,7 +29,9 @@ def validate_entry(entry: dict, config: OutputObject) -> bool:
     return True
 
 
-def insert_row(config, name, sid, insert_time) -> bool:
+def insert_row(config, name, sid, insert_time=time.localtime()) -> bool:
+    if type(insert_time) is not str:
+        insert_time = time.strftime("", insert_time)
     row = [
         entry.format(
             student_id=sid,
