@@ -9,7 +9,7 @@ html5lib==0.9999999
 idna==2.6
 imutils==0.4.6
 Markdown==2.6.11
-numpy==1.14.1
+numpy==1.22.0
 opencv-python==3.2.0.6
 Pillow==5.1.0
 protobuf==3.6.0
